@@ -1,5 +1,4 @@
 clear all
-mpcverbosity off
 
 x=0;
 x1=0;
@@ -85,7 +84,7 @@ cell_F1 = zeros(1,K_fin_follower1);
 %the value of z at each time instant
 % z1=zeros(1,K_fin1);
 
-for x=1:K_finA-1
+for x=1:K_finA
 
     k1 = k1 + 1; % timer that resets after each horizon
 
@@ -96,7 +95,7 @@ for x=1:K_finA-1
     end
 
     vLeader(1,x) = solutionv1(1,k1+1);
-
+    
 if solutionz1 == 1
 if (x <= A)
 % if  (p_F(1,j) <= p_bar_follower)
@@ -179,7 +178,7 @@ k1 = 0;
 if x==1
     vLeader(1,x) = solutionv1(1,k1+1);
 else
-    stateL_temp = decisionControlL([p_L(1,x-1) vLeader(1,x-1)]',v_traffic1(cell_L(1,x):cell_L(1,x)+1,x:x+1),solutionv1(1,k1+1),10,cell_L(1,x));
+    stateL_temp = decisionControlL([p_L(1,x-1) vLeader(1,x-1)],v_traffic1(cell_L(1,x):cell_L(1,x)+1,x:x+1),solutionv1(1,k1+1));
     p_L(1,x) = stateL_temp(1);
     vLeader(1,x) = stateL_temp(2);
 end
