@@ -1,4 +1,4 @@
-declear all
+clear all
 mpcverbosity off
 
 x=0;
