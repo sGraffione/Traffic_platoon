@@ -1,4 +1,4 @@
-clear all
+declear all
 mpcverbosity off
 
 x=0;
@@ -179,6 +179,7 @@ k1 = 0;
 if x==1
     vLeader(1,x) = solutionv1(1,k1+1);
 else
+    % Implement the platoon microscopic control
     stateL_temp = decisionControlL([p_L(1,x-1) vLeader(1,x-1)]',v_traffic1(cell_L(1,x):cell_L(1,x)+1,x:x+1),solutionv1(1,k1+1),10,cell_L(1,x));
     p_L(1,x) = stateL_temp(1);
     vLeader(1,x) = stateL_temp(2);
