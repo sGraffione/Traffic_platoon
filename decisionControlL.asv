@@ -55,7 +55,7 @@ function [state,uFinal] = decisionControlL(state,state_prec,u_prec,velTraffic,ve
 
 %     mpcobj.OV(2).MaxECR = 0;
 
-    mpcobj.Weights.OutputVariables = [0 10];
+    mpcobj.Weights.OutputVariables = [0.00001 10];
 
     xc = mpcstate(mpcobj);
     xc.LastMove = u_prec;

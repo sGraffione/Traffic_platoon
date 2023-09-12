@@ -1,5 +1,5 @@
 clear all
-% mpcverbosity off
+mpcverbosity off
 
 x=0;
 x1=0;
@@ -87,8 +87,6 @@ cell_F1 = zeros(1,K_fin_follower1);
 %%
 clear all
 load("ws1.mat");
-mpcverbosity off
-
 for x=1:K_finA-1
 
     k1 = k1 + 1; % timer that resets after each horizon
@@ -164,12 +162,12 @@ for x=1:K_finA-1
     %k_traffic is k + k of the entrance of the Leader platoon
     %  k_traffic = j + K_leader;
     if x==1
-        vLeader(1,x:x+1) = solutionv1(1,k1+1);
-        uLeader(1,x:x+1) = 0; % init control action for leader
+        vLeader(1,x) = solutionv1(1,k1+1);
+        uLeader(1,x) = 0; % init control action for leader
     else
         % Implement the platoon microscopic control
         vLeader_desired(1,x) = solutionv1(1,k1+1);
-        [stateL_temp,uLeader_temp] = decisionControlL([p_L(1,x) vLeader(1,x)]',[p_L(1,x-1) vLeader(1,x-1)]',uLeader(1,x),v_traffic1(cell_L(1,x):cell_L(1,x)+1,x:x+1),vLeader_desired(1,x),10,cell_L(1,x));
+        [stateL_temp,uLeader_temp] = decisionControlL([p_L(1,x) vLeader(1,x)]',uLeader(1,x),v_traffic1(cell_L(1,x):cell_L(1,x)+1,x:x+1),vLeader_desired(1,x),10,cell_L(1,x));
         p_L(1,x+1) = stateL_temp(1);
         vLeader(1,x+1) = stateL_temp(2);
         uLeader(1,x+1) = uLeader_temp;
