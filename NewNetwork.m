@@ -38,6 +38,7 @@ p_iniz_follower1 = 0;
 
 % Actual speed of the leader
 vLeader = zeros(1,K_fin1 + K_fin2 + K_fin3);
+uLeader = zeros(1,K_fin1 + K_fin2 + K_fin3);
 
 % Speed of traffic in the section of the leader
 v_traffic_section_leader = zeros (1,K_fin1 + K_fin2 + K_fin3);
@@ -169,7 +170,7 @@ for x=1:K_finA-1
     else
         % Implement the platoon microscopic control
         vLeader_desired(1,x) = solutionv1(1,k1+1);
-        [stateL_temp,uLeader_temp] = decisionControlL([p_L(1,x) vLeader(1,x)]',[p_L(1,x-1) vLeader(1,x-1)]',uLeader(1,x),v_traffic1(cell_L(1,x):cell_L(1,x)+1,x:x+1),vLeader_desired(1,x),10,cell_L(1,x));
+        [stateL_temp,uLeader_temp] = decisionControlL([p_L(1,x) vLeader(1,x)]',[p_L(1,x-1) vLeader(1,x-1)]',uLeader(1,x),v_traffic1(cell_L(1,x),k1+1),vLeader_desired(1,x),10,cell_L(1,x));
         p_L(1,x+1) = stateL_temp(1);
         vLeader(1,x+1) = stateL_temp(2);
         uLeader(1,x+1) = uLeader_temp;
@@ -209,7 +210,7 @@ for x=1:K_finA-1
         end
     end
 
-    if (p_L(1,x+1) >= 16.8) % CAMBIARE IN INSTANTE ATTUALE p_L(1,x)
+    if (p_L(1,x+1) >= 16.8)
         j1 = x+1;
         break
     end
