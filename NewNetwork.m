@@ -18,7 +18,7 @@ K_follower = 0;
 K_follower1 = 0;
 
 % Deadline of the arrival of the L
-k_bar1 = 110;
+k_bar1 = 150;
 K_fin1 = k_bar1 + 5;
 K_finA = K_fin1; % original meeting time of the leader because K_fin1 changes when K_bar1 changes
 k_bar2 = 110;
@@ -171,9 +171,11 @@ for x=1:K_finA-1
         % Implement the platoon microscopic control
         vLeader_desired(1,x) = solutionv1(1,k1+1);
         [stateL_temp,uLeader_temp] = decisionControlL([p_L(1,x) vLeader(1,x)]',[p_L(1,x-1) vLeader(1,x-1)]',uLeader(1,x),v_traffic1(cell_L(1,x),k1+1),vLeader_desired(1,x),10,cell_L(1,x));
-        p_L(1,x+1) = stateL_temp(1);
-        vLeader(1,x+1) = stateL_temp(2);
-        uLeader(1,x+1) = uLeader_temp;
+        uLeader_full(:,x+1) = uLeader_temp;
+        vLeader_full(:,x+1) = stateL_temp(2,:); %  prendo solo la velocità
+        p_L(1,x+1) = stateL_temp(1,end);
+        vLeader(1,x+1) = stateL_temp(2,end);
+        uLeader(1,x+1) = uLeader_temp(1,end);
     end
 
     % if k1 == 0 && vLeader(1,x)>v_traffic1(cell_L(1,x),k1+1)

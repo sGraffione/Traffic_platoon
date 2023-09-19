@@ -6,87 +6,92 @@ function [state,uFinal] = decisionControlL(state,state_prec,u_prec,velTraffic,ve
     % TsTraffic: traffic sampling time
     % currSec: section which currently contains the vehicle
 
+
+    persistent mpcobj xc
+
     % Convert in the correct unit of measure for the algorithm
     velTraffic = velTraffic./3.6;
-    state(1) = state(1) * 1000;
-    state(2) = state(2)/3.6;
+    state(1,1) = state(1,1) * 1000;
+    state(2,1) = state(2,1)/3.6;
     velRef = velRef/3.6;
     % System's variables
     Ts = 0.1;
     Ca = 9;
     Cb = 0.06;
     Cc = 0.023;
-    W = 10;
+    W = 1;
     Wp = W;
     v = 100/3.6;
     f_max = Ca+Cb*v+Cc*v^2;
     f_min = Ca;
+    
+    Hp = 15;
+    Hc = 5;
 
-    % System's matrices
-%     A = [0 1
-%         0 -(Cb+2*Cc*state(2))/Wp]*Ts+eye(2);
-%     B = [0; 1/Wp]*Ts;
     A = (-(Cb+2*Cc*state(2))/Wp)*Ts+1;
     B = (1/Wp)*Ts;
     C = 1;
     D = 0;
-    % Create the system
-    sysd = ss(A,B,C,D,Ts);
-%     sysd = c2d(sys,Ts);
-%     A = sysd.A;
-%     B = sysd.B;
+
+    if isempty(mpcobj)
+        % System's matrices
+        %     A = [0 1
+        %         0 -(Cb+2*Cc*state(2))/Wp]*Ts+eye(2);
+        %     B = [0; 1/Wp]*Ts;
+        
+        % Create the system
+        sysd = ss(A,B,C,D,Ts);
+        %     sysd = c2d(sys,Ts);
+        %     A = sysd.A;
+        %     B = sysd.B;
+        
+        % Design the MPC
+        mpcobj = mpc(sysd);
+        
+        mpcobj.PredictionHorizon = Hp;
+        mpcobj.ControlHorizon = Hc;
+        
+        mpcobj.MV.Min = -f_max;
+        mpcobj.MV.Max = f_max;
+        
+        mpcobj.MV.RateMin = -f_max*Ts;
+        mpcobj.MV.RateMax = f_max*Ts;
+        
+        %     mpcobj.OV(1).Min = -inf;
+        %     mpcobj.OV(2).Min = 0;
+        %     mpcobj.OV(1).Max = inf;
+        %     mpcobj.OV(2).Max = velTraffic(1,1);
+        
+        mpcobj.OV.Min = 0;
+        mpcobj.OV.Max = velTraffic(1,1);
+        
+        %     mpcobj.OV.MinECR = 0;
+        %     mpcobj.OV.MaxECR = 0;
+        %     mpcobj.Weights.ECR = 1;
+        
+        mpcobj.Weights.OutputVariables = 10;
+        mpcobj.Weights.MVrate = 0.1;
+        
+        %     setEstimator(mpcobj,'custom');
+        
+        xc = mpcstate(mpcobj);
+    else
+        mpcobj.OV.Max = velTraffic(1,1);
+    end
+        
     
-    % Design the MPC
-    Hp = 15;
-    Hc = 5;
-    mpcobj = mpc(sysd);
-
-    mpcobj.PredictionHorizon = Hp;
-    mpcobj.ControlHorizon = Hc;
-
-    mpcobj.MV.Min = -f_max;
-    mpcobj.MV.Max = f_max;
-
-    mpcobj.MV.RateMin = -f_max*Ts;
-    mpcobj.MV.RateMax = f_max*Ts;
-
-%     mpcobj.OV(1).Min = -inf;
-%     mpcobj.OV(2).Min = 0;
-%     mpcobj.OV(1).Max = inf;
-%     mpcobj.OV(2).Max = velTraffic(1,1);
+%     xc.LastMove = u_prec;
     
-    mpcobj.OV.Min = 0;
-    mpcobj.OV.Max = velTraffic(1,1);
-
-%     mpcobj.OV.MinECR = 0;
-%     mpcobj.OV.MaxECR = 0;
-%     mpcobj.Weights.ECR = 1;
-
-    mpcobj.Weights.OutputVariables = 10;
-    mpcobj.Weights.MVrate = 0.1;
-
-%     setEstimator(mpcobj,'custom');
-
-    xc = mpcstate(mpcobj);
-    xc.LastMove = u_prec;
-    
-    pRef = state(1)+velRef*(TsTraffic+Hp);
+    pRef = state(1,1)+velRef*(TsTraffic+Hp);
     xRef = [pRef velRef];
-
-    state_prec(1) = state_prec(1)*1000;
-    state_prec(2) = state_prec(2)/3.6;
-    nominalState.X = state;
-    nominalState.U = u_prec;
-    nominalState.Y = state;
-    nominalState.DX = state-state_prec;
 
     % Control loop for one traffic sampling instant (Traffic POV)
     % Each iteration of the loop is one platoon sampling instant (Platoon POV)
     for k = 1:TsTraffic/Ts
-        u(k) = mpcmove(mpcobj,xc,state(2),xRef(2));
+        u(k) = mpcmove(mpcobj,xc,state(2,k),xRef(2));
 %         state_prec = state;
-        state(1) = state(1) + state(2)*Ts;
-        state(2) = A*state(2)+B*u(k); % TODO mettere non lineare
+        state(1,k+1) = state(1,k) + state(2,k)*Ts;
+        state(2,k+1) = A*state(2,k)+B*u(k); % TODO mettere non lineare
 %         state = dstate + xRef;
 %         if ceil(state(1)/700)>currSec
 %            mpcobj.OutputVariables(2).Max = [velTraffic(2,1)];
@@ -109,7 +114,7 @@ function [state,uFinal] = decisionControlL(state,state_prec,u_prec,velTraffic,ve
 
     end
     % Re-convert results to be coherent with traffic units of measure
-    state(1) = state(1)/1000;
-    state(2) = state(2)*3.6;
-    uFinal = u(end);
+    state(1,:) = state(1,:)/1000;
+    state(2,:) = state(2,:)*3.6;
+    uFinal = u;
 end
