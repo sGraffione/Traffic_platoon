@@ -11,14 +11,14 @@ c=0;
 
 
 % Time of entrance of the L with respect to the model
-K_leader1 = 200;
+K_leader1 = 0;
 K_leader2 = 100;
 K_leader3 = 0;
 K_follower = 0;
 K_follower1 = 0;
 
 % Deadline of the arrival of the L
-k_bar1 = 150;
+k_bar1 = 90;
 K_fin1 = k_bar1 + 5;
 K_finA = K_fin1; % original meeting time of the leader because K_fin1 changes when K_bar1 changes
 k_bar2 = 110;
@@ -86,9 +86,9 @@ cell_F1 = zeros(1,K_fin_follower1);
 %the value of z at each time instant
 % z1=zeros(1,K_fin1);
 %%
-clear all
-load("ws1.mat");
-mpcverbosity off
+% clear all
+% load("ws1.mat");
+% mpcverbosity off
 
 for x=1:K_finA-1
 
